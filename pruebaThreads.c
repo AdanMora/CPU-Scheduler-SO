@@ -1,4 +1,4 @@
-#include "funciones.c"
+#include "estructuras.c"
 
 void *hola(void *arg) {
 	char *msg = "Hola";
@@ -29,26 +29,30 @@ int  main() {
 	pthread_join(h2, NULL);
 	printf ("Fin\n");*/
 	
-	struct ListaColaReady colaReady;
-	colaReady->insertar(3,3,0);
-	colaReady->insertar(4,1,1);
-	colaReady->insertar(8,2,2);
-	colaReady->insertar(1,4,3);
-	colaReady->insertar(6,1,4);
+	ListaColaReady * ptr_colaReady = malloc(sizeof(ListaColaReady));   
+    ptr_colaReady->primerNodo = 0;
+
 	
-	printf("Length: %d \n",colaReady->largo());
+	insertar(3,3,0,ptr_colaReady);
+	insertar(4,1,1,ptr_colaReady);
+	insertar(8,2,2,ptr_colaReady);
+	insertar(1,4,3,ptr_colaReady);
+	insertar(6,1,4,ptr_colaReady);
 	
-	colaReady->imprimir();
+	printf("Length: %d \n",largoLista(ptr_colaReady));
+
 	
-	colaReady->extraerPID();
-	colaReady->imprimir();
+	imprimirLista(ptr_colaReady);
+
 	
-	colaReady->extraerBurst();
-	colaReady->imprimir();
+	extraerPID(ptr_colaReady);
+	imprimirLista(ptr_colaReady);
 	
-	colaReady->extraerPrioridad();
-	colaReady->imprimir();
+	extraerBurst(ptr_colaReady);
+	imprimirLista(ptr_colaReady);
 	
+	extraerPrioridad(ptr_colaReady);
+	imprimirLista(ptr_colaReady);
 	
 	
 	return(0);

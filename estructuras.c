@@ -7,8 +7,6 @@
 
 #include "estructuras.h"
 
-
-
 /*
  * Inserta un proceso en la Cola del Ready
  * Entradas: Burst, Prioridad y PID del proceso a insertar
