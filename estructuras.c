@@ -38,13 +38,10 @@ void insertar(int b,int p, int id, ListaColaReady * ready){
 int largoLista(ListaColaReady * ready){
     int cont = 1;
     if (isListaEmpty(ready)){
-        printf("Vacio\n");
         return 0;
     }else{
-        printf("No vacio\n");
         NodoJobScheduler * temp = ready->primerNodo->siguiente;
         while (temp != ready->primerNodo){
-            printf("while\n");
             cont ++;
             temp = temp->siguiente;
         }
@@ -153,12 +150,9 @@ NodoJobScheduler* extraerPrioridad(ListaColaReady * ready){
  * Restricciones: no tiene.
  */
 bool isListaEmpty(ListaColaReady * ready){
-    printf("Entro isEmpty\n");
     if (ready->primerNodo == 0){
-        printf("Ens Verdadero\n");
         return true;
     }
-    printf("Es Falso\n");
     return false;
 }
 
