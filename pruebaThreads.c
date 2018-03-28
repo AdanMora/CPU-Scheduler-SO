@@ -1,4 +1,5 @@
 #include "estructuras.c"
+#include <time.h>
 
 void *hola(void *arg) {
 	char *msg = "Hola";
@@ -25,7 +26,7 @@ void * jobScheduling(void *arg){
 	int i;
 	for (i = 1; i < 7; i++){
 		sleep(2);
-		insertar(10-i,i,i,colaReady);
+		insertar(rand()%10,(rand()%5)+1,i,colaReady);
 		printf("\nProceso insertado a la cola\n");
 	}
 	return 0;
@@ -34,10 +35,10 @@ void * jobScheduling(void *arg){
 void * cpuScheduling(void *arg){
 	ListaColaReady * colaReady = arg;
 	int cont = 0;
-	while (cont != 20){
+	while (cont != 10){
 		if (!(isListaEmpty(colaReady))){
 			imprimirLista(colaReady);
-			NodoJobScheduler * proc = extraerBurst(colaReady);
+			NodoJobScheduler * proc = extraerPrioridad(colaReady);
 			printf("\nSe extrajo el Proceso PID: %d, BURST: %d, PRIORIDAD: %d \n", proc->PID, proc->burst, proc->prioridad);
 			sleep(proc->burst);
 		} else{
@@ -51,13 +52,14 @@ void * cpuScheduling(void *arg){
 }
 
 int  main() {
+	srand(time(NULL));   // should only be called once
 	ListaColaReady * ptr_colaReady = malloc(sizeof(ListaColaReady));   
     ptr_colaReady->primerNodo = 0;
 	
 	pthread_t  jobSch;
 	pthread_t  cpuSch;
-	pthread_create(&jobSch, 0 , jobScheduling,(void *)ptr_colaReady);
-	pthread_create(&cpuSch, 0 , cpuScheduling,(void *)ptr_colaReady);
+	pthread_create(&jobSch, 0, jobScheduling,(void *)ptr_colaReady);
+	pthread_create(&cpuSch, 0, cpuScheduling,(void *)ptr_colaReady);
 	pthread_join(jobSch, NULL);
 	pthread_join(cpuSch, NULL);
 	
