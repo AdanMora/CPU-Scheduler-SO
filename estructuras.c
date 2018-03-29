@@ -13,10 +13,29 @@
  * Salidas: no tiene.
  * Restricciones: no tiene.
  */
-void insertar(int b,int p, int id, ListaColaReady * ready){
+void insertar(int b,int p, int id, int t, ListaColaReady * ready){
     NodoJobScheduler * nuevo = malloc(sizeof(NodoJobScheduler));
-    nuevo->burst = b; nuevo->prioridad = p; nuevo->PID = id;
+    nuevo->burst = b; nuevo->prioridad = p; nuevo->PID = id; nuevo->tLlegada = t; nuevo->tSalida = 0;
 	
+    if (isListaEmpty(ready)){
+        ready->primerNodo = nuevo;
+        nuevo->anterior = nuevo;
+        nuevo->siguiente = nuevo;
+    }else{
+        nuevo->siguiente = ready->primerNodo;
+        nuevo->anterior = ready->primerNodo->anterior;
+        ready->primerNodo -> anterior -> siguiente = nuevo;
+        ready->primerNodo -> anterior = nuevo;
+    }
+}
+
+/*
+ * Inserta un proceso en la Cola del Ready
+ * Entradas: Burst, Prioridad y PID del proceso a insertar
+ * Salidas: no tiene.
+ * Restricciones: no tiene.
+ */
+void insertarNodo(NodoJobScheduler * nuevo, ListaColaReady * ready){	
     if (isListaEmpty(ready)){
         ready->primerNodo = nuevo;
         nuevo->anterior = nuevo;
@@ -73,6 +92,8 @@ NodoJobScheduler* extraerPID(ListaColaReady * ready){
         return borrado;
     }
 }
+
+
 
 /*
  * Borra de la lista
@@ -166,10 +187,10 @@ void imprimirLista(ListaColaReady * ready){
     if (isListaEmpty(ready)){
         printf("\nCola de Ready vacia...\n");
     }else{
-        printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d \n", ready->primerNodo->PID, ready->primerNodo->burst, ready->primerNodo->prioridad);
+        printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d, TIEMPO LLEGADA: %d, TIEMPO SALIDA: %d\n", ready->primerNodo->PID, ready->primerNodo->burst, ready->primerNodo->prioridad, ready->primerNodo->tLlegada, ready->primerNodo->tSalida);
         NodoJobScheduler * temp = ready->primerNodo->siguiente;
         while (temp != ready->primerNodo){
-            printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d \n", temp->PID, temp->burst, temp->prioridad);
+            printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d, TIEMPO LLEGADA: %d, TIEMPO SALIDA: %d\n", temp->PID, temp->burst, temp->prioridad, temp->tLlegada, temp->tSalida);
             temp = temp->siguiente;
         }
     }
@@ -203,4 +224,48 @@ NodoJobScheduler * borrarEnPosicion(int pos, ListaColaReady * ready){
     borrado->siguiente = NULL;
 	return borrado;
 }
+
+void reporteCPU(ListaColaReady * hist){
+    printf("\n~~~REPORTE CPU SCHEDULING~~~\n");
+    if (isListaEmpty(hist)){
+        printf("\nNo hay procesos finalizados...\n");
+    } else{
+        NodoJobScheduler * temp = hist->primerNodo->siguiente;
+        int largo = largoLista(hist);
+        int ocioso = 0;
+        int TAT_Total = 0;
+        int TW_Total = 0;
+        int TAT = hist->primerNodo->tSalida - hist->primerNodo->tLlegada;
+        int TW = TAT - hist->primerNodo->burst;
+        TAT_Total += TAT;
+        TW_Total += TW;
+        printf("\n|PID\t|B \t|P \t|T.L\t|T.S\t|TAT\t|TW\n");
+        printf("|%d\t|%d\t|%d\t|%d\t|%d\t|%d\t|%d\n",hist->primerNodo->PID, hist->primerNodo->burst, hist->primerNodo->prioridad, hist->primerNodo->tLlegada, hist->primerNodo->tSalida, TAT,TW);
+        while (temp != hist->primerNodo){
+            TAT = temp->tSalida - temp->tLlegada;
+            TW = TAT - temp->burst;
+            TAT_Total += TAT;
+            TW_Total += TW;
+            printf("|%d\t|%d\t|%d\t|%d\t|%d\t|%d\t|%d\n",temp->PID, temp->burst, temp->prioridad, temp->tLlegada, temp->tSalida, TAT,TW);
+            if (temp->tLlegada - temp->anterior->tSalida > 0){
+                ocioso += temp->tLlegada - temp->anterior->tSalida;
+            }
+            temp = temp->siguiente;
+        }
+        printf("\nTiempo Final: %d\n", hist->tiempoFinal);
+        printf("\nTiempo CPU Ocioso: %d\n", ocioso);
+        
+        if (hist->tiempoFinal - temp->anterior->tSalida > 0){
+            ocioso += hist->tiempoFinal - temp->anterior->tSalida;
+        }
+        
+        printf("\nPromedio Turn-Around Time: %d\n", TAT_Total / largo);
+        printf("Promedio Waiting Time: %d\n", TAT_Total / largo);
+        printf("\nTiempo CPU Ocioso: %d\n", ocioso);
+        
+    }
+    printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+}
+
+
 

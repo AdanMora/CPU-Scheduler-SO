@@ -21,73 +21,66 @@ void *mundo(void *arg ) {
 	return 0;
 }
 
-void * jobScheduling(void *arg){
-	ListaColaReady * colaReady = arg;
+void * jobScheduling(void *cola){
+	ListaColaReady * colaReady = cola;
 	int i;
-	for (i = 1; i < 7; i++){
-		sleep(2);
-		insertar(rand()%10,(rand()%5)+1,i,colaReady);
+	for (i = 1; i < 5; i++){
+		insertar(rand()%10, (rand()%5)+1, i, time(NULL) - colaReady->tiempoInicial, colaReady);
 		printf("\nProceso insertado a la cola\n");
+		sleep(2);
 	}
 	return 0;
 }
 
-void * cpuScheduling(void *arg){
-	ListaColaReady * colaReady = arg;
+void * cpuScheduling(void *lts){
+	ListasArgs * listas = lts;
+	ListaColaReady * colaReady = listas->colaReady;
+	ListaColaReady * hist = listas->hist;
+	
 	int cont = 0;
 	while (cont != 10){
 		if (!(isListaEmpty(colaReady))){
 			imprimirLista(colaReady);
 			NodoJobScheduler * proc = extraerPrioridad(colaReady);
-			printf("\nSe extrajo el Proceso PID: %d, BURST: %d, PRIORIDAD: %d \n", proc->PID, proc->burst, proc->prioridad);
+			printf("\nEjecutando el Proceso PID: %d, BURST: %d, PRIORIDAD: %d \n", proc->PID, proc->burst, proc->prioridad);
 			sleep(proc->burst);
+			proc->tSalida = time(NULL) - hist->tiempoInicial;
+			insertarNodo(proc, hist);
 		} else{
 			sleep(1);
 			cont ++;
 		}
 		
 	}
+	hist->tiempoFinal = time(NULL) - hist->tiempoInicial;
 	
 	return 0;
 }
 
 int  main() {
-	srand(time(NULL));   // should only be called once
-	ListaColaReady * ptr_colaReady = malloc(sizeof(ListaColaReady));   
-    ptr_colaReady->primerNodo = 0;
+	srand(time(NULL));
 	
-	pthread_t  jobSch;
-	pthread_t  cpuSch;
+	ListasArgs * listas = malloc(sizeof(ListasArgs));
+	
+	ListaColaReady * ptr_colaReady = malloc(sizeof(ListaColaReady));
+    ptr_colaReady->primerNodo = 0;
+	ptr_colaReady->tiempoInicial = time(NULL);
+	
+	ListaColaReady * hist = malloc(sizeof(ListaColaReady));
+    hist->primerNodo = 0;
+	hist->tiempoInicial = time(NULL);
+	
+	listas->colaReady = ptr_colaReady;
+	listas->hist = hist;
+	
+	pthread_t jobSch;
+	pthread_t cpuSch;
 	pthread_create(&jobSch, 0, jobScheduling,(void *)ptr_colaReady);
-	pthread_create(&cpuSch, 0, cpuScheduling,(void *)ptr_colaReady);
+	pthread_create(&cpuSch, 0, cpuScheduling,(void *)listas);
 	pthread_join(jobSch, NULL);
 	pthread_join(cpuSch, NULL);
 	
-	
-
-	/*
-	insertar(3,3,0,ptr_colaReady);
-	insertar(4,1,1,ptr_colaReady);
-	insertar(8,2,2,ptr_colaReady);
-	insertar(1,4,3,ptr_colaReady);
-	insertar(6,1,4,ptr_colaReady);
-	
-	printf("Length: %d \n",largoLista(ptr_colaReady));
-
-	
-	imprimirLista(ptr_colaReady);
-
-	
-	extraerPID(ptr_colaReady);
-	imprimirLista(ptr_colaReady);
-	
-	extraerBurst(ptr_colaReady);
-	imprimirLista(ptr_colaReady);
-	
-	extraerPrioridad(ptr_colaReady);
-	imprimirLista(ptr_colaReady);
-	*/
-	
+	reporteCPU(hist);
 	
 	return(0);
 }
