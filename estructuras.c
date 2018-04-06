@@ -4,6 +4,7 @@
 #include <unistd.h>
 #include <strings.h>
 #include <stdbool.h>
+#include<ctype.h>
 
 #include "estructuras.h"
 

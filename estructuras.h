@@ -29,6 +29,7 @@ typedef struct ListaColaReady{
 typedef struct ListasArgs{
 	ListaColaReady * colaReady;
 	ListaColaReady * hist;
+    bool * seguir;
 	
 } ListasArgs;
  
