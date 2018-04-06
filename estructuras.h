@@ -6,10 +6,12 @@ typedef struct ListaColaReady ListaColaReady;
 
 typedef struct NodoJobScheduler{
     int burst;
+    int burst_temp;
 	int prioridad;
     int PID;
     int tLlegada;
     int tSalida;
+    bool escogido;
 
     NodoJobScheduler * siguiente;
 	NodoJobScheduler * anterior;
@@ -18,6 +20,7 @@ typedef struct NodoJobScheduler{
 
 typedef struct ListaColaReady{
 	NodoJobScheduler * primerNodo;
+	int contPID;
     int tiempoInicial;
     int tiempoFinal;
 	
@@ -35,11 +38,15 @@ void insertarNodo(NodoJobScheduler*, ListaColaReady *);
 
 int largoLista(ListaColaReady *);
 
-NodoJobScheduler* extraerPID(ListaColaReady *);
+int extraerFIFO(ListaColaReady *, ListaColaReady *);
 
-NodoJobScheduler* extraerBurst(ListaColaReady *);
+int extraerSJF(ListaColaReady *, ListaColaReady *);
 
-NodoJobScheduler* extraerPrioridad(ListaColaReady *);
+int extraerHPF(ListaColaReady *, ListaColaReady *);
+
+int extraerRR(int, ListaColaReady *, ListaColaReady *);
+
+void resetearEscogido(ListaColaReady *);
 
 bool isListaEmpty(ListaColaReady *);
 

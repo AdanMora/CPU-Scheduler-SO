@@ -25,9 +25,10 @@ void * jobScheduling(void *cola){
 	ListaColaReady * colaReady = cola;
 	int i;
 	for (i = 1; i < 5; i++){
-		insertar(rand()%10, (rand()%5)+1, i, time(NULL) - colaReady->tiempoInicial, colaReady);
+		insertar(rand()%10+1, (rand()%5)+1, colaReady->contPID, time(NULL) - colaReady->tiempoInicial, colaReady);
 		printf("\nProceso insertado a la cola\n");
-		sleep(2);
+		colaReady->contPID ++;
+		sleep(1);
 	}
 	return 0;
 }
@@ -36,16 +37,17 @@ void * cpuScheduling(void *lts){
 	ListasArgs * listas = lts;
 	ListaColaReady * colaReady = listas->colaReady;
 	ListaColaReady * hist = listas->hist;
-	
+	int burst;
 	int cont = 0;
 	while (cont != 10){
 		if (!(isListaEmpty(colaReady))){
+			printf("\nREADY\n");
 			imprimirLista(colaReady);
-			NodoJobScheduler * proc = extraerPrioridad(colaReady);
-			printf("\nEjecutando el Proceso PID: %d, BURST: %d, PRIORIDAD: %d \n", proc->PID, proc->burst, proc->prioridad);
-			sleep(proc->burst);
-			proc->tSalida = time(NULL) - hist->tiempoInicial;
-			insertarNodo(proc, hist);
+			//burst = extraerRR(4, colaReady, hist);
+			burst = extraerSJF(colaReady, hist);
+			sleep(burst);
+			printf("\nHISTORIAL\n");
+			imprimirLista(hist);
 		} else{
 			sleep(1);
 			cont ++;
@@ -65,6 +67,7 @@ int  main() {
 	ListaColaReady * ptr_colaReady = malloc(sizeof(ListaColaReady));
     ptr_colaReady->primerNodo = 0;
 	ptr_colaReady->tiempoInicial = time(NULL);
+	ptr_colaReady->contPID = 0;
 	
 	ListaColaReady * hist = malloc(sizeof(ListaColaReady));
     hist->primerNodo = 0;

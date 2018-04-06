@@ -15,7 +15,8 @@
  */
 void insertar(int b,int p, int id, int t, ListaColaReady * ready){
     NodoJobScheduler * nuevo = malloc(sizeof(NodoJobScheduler));
-    nuevo->burst = b; nuevo->prioridad = p; nuevo->PID = id; nuevo->tLlegada = t; nuevo->tSalida = 0;
+    nuevo->burst = b; nuevo->burst_temp = b; nuevo->prioridad = p;
+    nuevo->PID = id; nuevo->tLlegada = t; nuevo->tSalida = 0; nuevo->escogido = false;
 	
     if (isListaEmpty(ready)){
         ready->primerNodo = nuevo;
@@ -46,6 +47,7 @@ void insertarNodo(NodoJobScheduler * nuevo, ListaColaReady * ready){
         ready->primerNodo -> anterior -> siguiente = nuevo;
         ready->primerNodo -> anterior = nuevo;
     }
+    printf("\nProceso ejecutado (Historial) -> PID: %d, BURST: %d, PRIORIDAD: %d \n", nuevo->PID, nuevo->burst, nuevo->prioridad);
 }
 
 /*
@@ -74,7 +76,7 @@ int largoLista(ListaColaReady * ready){
  * Salidas: puntero al nodo borrado
  * Restricciones: No tiene
  */
-NodoJobScheduler* extraerPID(ListaColaReady * ready){
+int extraerFIFO(ListaColaReady * ready, ListaColaReady * hist){
     NodoJobScheduler * borrado;
     if (isListaEmpty(ready)){
         return 0;
@@ -87,9 +89,9 @@ NodoJobScheduler* extraerPID(ListaColaReady * ready){
 			ready->primerNodo->anterior->siguiente = ready->primerNodo->siguiente;
 			ready->primerNodo = ready->primerNodo->siguiente;
         }
-		borrado->anterior = NULL;
-        borrado->siguiente = NULL;
-        return borrado;
+        borrado->tSalida = time(NULL) - hist->tiempoInicial + borrado->burst;
+		insertarNodo(borrado, hist);
+        return borrado->burst;
     }
 }
 
@@ -101,7 +103,7 @@ NodoJobScheduler* extraerPID(ListaColaReady * ready){
  * Salidas: puntero al nodo borrado
  * Restricciones: No tiene
  */
-NodoJobScheduler* extraerBurst(ListaColaReady * ready){
+int extraerSJF(ListaColaReady * ready, ListaColaReady * hist){
     NodoJobScheduler * borrado;
 	int minBurst = ready->primerNodo->burst;
 	int minPos = 0;
@@ -126,7 +128,9 @@ NodoJobScheduler* extraerBurst(ListaColaReady * ready){
         	borrado = borrarEnPosicion(minPos, ready);
         }
 		
-        return borrado;
+        borrado->tSalida = time(NULL) - hist->tiempoInicial + borrado->burst;
+		insertarNodo(borrado, hist);
+        return borrado->burst;
     }
 }
 
@@ -136,7 +140,7 @@ NodoJobScheduler* extraerBurst(ListaColaReady * ready){
  * Salidas: puntero al nodo borrado
  * Restricciones: No tiene
  */
-NodoJobScheduler* extraerPrioridad(ListaColaReady * ready){
+int extraerHPF(ListaColaReady * ready, ListaColaReady * hist){
     NodoJobScheduler * borrado;
 	int minPrioridad = ready->primerNodo->prioridad;
 	int minPos = 0;
@@ -160,8 +164,55 @@ NodoJobScheduler* extraerPrioridad(ListaColaReady * ready){
         	}
         	borrado = borrarEnPosicion(minPos, ready);
         }
-		
-        return borrado;
+		borrado->tSalida = time(NULL) - hist->tiempoInicial + borrado->burst;
+		insertarNodo(borrado, hist);
+        return borrado->burst;
+    }
+}
+
+/*
+ * Borra de la lista
+ * Entradas: Nodo a eliminar
+ * Salidas: puntero al nodo borrado
+ * Restricciones: No tiene
+ */
+int extraerRR(int quantum, ListaColaReady * ready, ListaColaReady * hist){
+    int burstExtraido;
+    if (isListaEmpty(ready)){
+        return 0;
+    }else{
+        int pos = 0;
+        NodoJobScheduler * temp = ready->primerNodo;
+        while (temp->escogido){
+            if (temp == ready->primerNodo && temp->anterior->escogido){
+                resetearEscogido(ready);
+            } else {
+                temp = temp->siguiente;
+                pos ++;
+            }
+        }
+        if (temp->burst_temp > quantum){
+            burstExtraido = quantum;
+            temp->burst_temp = temp->burst_temp - quantum;
+            temp->escogido = true;
+        } else {
+            NodoJobScheduler * borrado = borrarEnPosicion(pos, ready);
+            burstExtraido = borrado->burst_temp;
+            borrado->tSalida = time(NULL) - hist->tiempoInicial + borrado->burst_temp;
+	        insertarNodo(borrado, hist);
+            
+        }
+        printf("\nProceso escogido: PID %d, Burst: %d\n",temp->PID, burstExtraido);
+        return burstExtraido;
+    }
+}
+
+void resetearEscogido(ListaColaReady * ready){
+    ready->primerNodo->escogido = false;
+    NodoJobScheduler * temp = ready->primerNodo->siguiente;
+    while(temp != ready->primerNodo){
+        temp->escogido = false;
+        temp = temp->siguiente;
     }
 }
 
@@ -187,10 +238,10 @@ void imprimirLista(ListaColaReady * ready){
     if (isListaEmpty(ready)){
         printf("\nCola de Ready vacia...\n");
     }else{
-        printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d, TIEMPO LLEGADA: %d, TIEMPO SALIDA: %d\n", ready->primerNodo->PID, ready->primerNodo->burst, ready->primerNodo->prioridad, ready->primerNodo->tLlegada, ready->primerNodo->tSalida);
+        printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d, TIEMPO LLEGADA: %d, TIEMPO SALIDA: %d\n", ready->primerNodo->PID, ready->primerNodo->burst_temp, ready->primerNodo->prioridad, ready->primerNodo->tLlegada, ready->primerNodo->tSalida);
         NodoJobScheduler * temp = ready->primerNodo->siguiente;
         while (temp != ready->primerNodo){
-            printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d, TIEMPO LLEGADA: %d, TIEMPO SALIDA: %d\n", temp->PID, temp->burst, temp->prioridad, temp->tLlegada, temp->tSalida);
+            printf("\nProceso PID: %d, BURST: %d, PRIORIDAD: %d, TIEMPO LLEGADA: %d, TIEMPO SALIDA: %d\n", temp->PID, temp->burst_temp, temp->prioridad, temp->tLlegada, temp->tSalida);
             temp = temp->siguiente;
         }
     }
@@ -207,9 +258,13 @@ NodoJobScheduler * borrarEnPosicion(int pos, ListaColaReady * ready){
 	
     if (pos == 0){
 		borrado = ready->primerNodo;
-        ready->primerNodo->anterior->siguiente = ready->primerNodo->siguiente;
-        ready->primerNodo->siguiente->anterior = ready->primerNodo->anterior;
-        ready->primerNodo = ready->primerNodo->siguiente;
+        if (ready->primerNodo->siguiente == ready->primerNodo){
+            ready->primerNodo = 0;
+        } else {
+            ready->primerNodo->anterior->siguiente = ready->primerNodo->siguiente;
+            ready->primerNodo->siguiente->anterior = ready->primerNodo->anterior;
+            ready->primerNodo = ready->primerNodo->siguiente;
+        }
     } else{
     	NodoJobScheduler * temp = ready->primerNodo;
         while (pos != 0){
@@ -260,7 +315,7 @@ void reporteCPU(ListaColaReady * hist){
         }
         
         printf("\nPromedio Turn-Around Time: %d\n", TAT_Total / largo);
-        printf("Promedio Waiting Time: %d\n", TAT_Total / largo);
+        printf("Promedio Waiting Time: %d\n", TW_Total / largo);
         printf("\nTiempo CPU Ocioso: %d\n", ocioso);
         
     }
