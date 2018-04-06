@@ -1,35 +1,34 @@
 #include "estructuras.c"
 #include <time.h>
 
-void *hola(void *arg) {
-	char *msg = "Hola";
-	int i;
-	for ( i = 0 ; i < 5 ; i++ ) {
-		printf ("%s\n", msg);
-		sleep (1) ;
+void * consola(void *arg ) {
+	bool * seguir = arg;
+	int input;
+	printf("\nSeguir: %d\n",*seguir);
+	while (*seguir){
+		printf("\nIngrese el comando 'd' para detener la ejecucion: \n");
+		input = getchar();
+		//*input = putchar(tolower(*input));		
+		if (input == 'd'){
+			*seguir = false;
+			printf("\nEJECUCION DETENIDA\n");
+		}
 	}
-	return 0;
 }
 
-void *mundo(void *arg ) {
-	char *msg = " mundo ";
-	int i;
-	for ( i = 0 ; i < 5 ; i++ ) {
-		printf ("%s\n", msg);
-		sleep (1) ;
-	}
-	return 0;
-}
-
-void * jobScheduling(void *cola){
-	ListaColaReady * colaReady = cola;
+void * jobScheduling(void *lts){
+	ListasArgs * listas = lts;
+	ListaColaReady * colaReady = listas->colaReady;
+	bool * seguir = listas->seguir;
+	
 	int i;
 	for (i = 1; i < 5; i++){
 		insertar(rand()%10+1, (rand()%5)+1, colaReady->contPID, time(NULL) - colaReady->tiempoInicial, colaReady);
 		printf("\nProceso insertado a la cola\n");
 		colaReady->contPID ++;
-		sleep(1);
+		sleep(2);
 	}
+	
 	return 0;
 }
 
@@ -37,9 +36,10 @@ void * cpuScheduling(void *lts){
 	ListasArgs * listas = lts;
 	ListaColaReady * colaReady = listas->colaReady;
 	ListaColaReady * hist = listas->hist;
+	bool * seguir = listas->seguir;
 	int burst;
 	int cont = 0;
-	while (cont != 10){
+	while (*seguir){
 		if (!(isListaEmpty(colaReady))){
 			printf("\nREADY\n");
 			imprimirLista(colaReady);
@@ -60,6 +60,8 @@ void * cpuScheduling(void *lts){
 }
 
 int  main() {
+	bool flag = true;
+	bool * seguir = &flag;
 	srand(time(NULL));
 	
 	ListasArgs * listas = malloc(sizeof(ListasArgs));
@@ -75,13 +77,17 @@ int  main() {
 	
 	listas->colaReady = ptr_colaReady;
 	listas->hist = hist;
+	listas->seguir = seguir;
 	
 	pthread_t jobSch;
 	pthread_t cpuSch;
-	pthread_create(&jobSch, 0, jobScheduling,(void *)ptr_colaReady);
+	pthread_t console;
+	pthread_create(&console, 0, consola,(void *)seguir);
+	pthread_create(&jobSch, 0, jobScheduling,(void *)listas);
 	pthread_create(&cpuSch, 0, cpuScheduling,(void *)listas);
 	pthread_join(jobSch, NULL);
 	pthread_join(cpuSch, NULL);
+	pthread_join(console, NULL);
 	
 	reporteCPU(hist);
 	
