@@ -18,13 +18,15 @@ int main(int argc , char *argv[])
 	var = atoi(argv[2]);
 	printf("%s\n", argv[1]);
 	if(!strcmp("automatico",argv[1])){
+		
 		pthread_t main;
-		pthread_create(&main,NULL,generadorManual,(void*)var);
+		pthread_create(&main,NULL,generador,(void*)var);
 		pthread_join(main,NULL);
 	}
-	else if(!strcmp("manual",argv[1])){	
+	else if(!strcmp("manual",argv[1])){
+		
 		pthread_t main_thread;
-		pthread_create(&main_thread, NULL,generador, (void*) var);
+		pthread_create(&main_thread, NULL,generadorManual, (void*) var);
 		pthread_join(main_thread,NULL);
 	}
 	else{
@@ -55,8 +57,8 @@ void* automatico(void* var){
         	printf("Could not create socket");
     	}
     	puts("Socket created");
-     
-    	server.sin_addr.s_addr = inet_addr("192.168.43.127");
+     	
+    	server.sin_addr.s_addr = inet_addr("127.0.0.1");
     	server.sin_family = AF_INET;
     	server.sin_port = htons( 8888 );
  
@@ -175,8 +177,8 @@ void* generador(void* var){
 }
 
 void* generadorManual(void* var){
-	char* nbrArch = var;
-	printf(nbrArch);
+	//char* nbrArch = var;
+	//printf(nbrArch);
 	FILE* archivo = fopen("datos","r");
 	char line[256];
 	char* burst;
