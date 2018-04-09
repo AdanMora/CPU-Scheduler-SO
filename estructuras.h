@@ -30,6 +30,8 @@ typedef struct ListasArgs{
 	ListaColaReady * colaReady;
 	ListaColaReady * hist;
     bool * seguir;
+    int tipoAlgoritmo;
+    int quantum;
 	
 } ListasArgs;
  
@@ -56,5 +58,7 @@ void imprimirLista(ListaColaReady *);
 NodoJobScheduler* borrarEnPosicion(int, ListaColaReady *);
 
 void reporteCPU(ListaColaReady *);
+
+bool cmpString(char [], char []);
  
 #endif /* ESTRUCTURAS */
