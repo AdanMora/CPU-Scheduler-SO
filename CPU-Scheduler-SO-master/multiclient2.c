@@ -4,6 +4,7 @@
 #include<arpa/inet.h> //inet_addr
 #include<pthread.h>
 
+//hice un cambio
 //hilos
 void* automatico(void*);
 void* mamual(void*);
