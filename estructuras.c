@@ -2,9 +2,9 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <unistd.h>
-#include <strings.h>
+#include <string.h>
 #include <stdbool.h>
-#include<ctype.h>
+#include <ctype.h>
 
 #include "estructuras.h"
 
@@ -309,7 +309,7 @@ void reporteCPU(ListaColaReady * hist){
             temp = temp->siguiente;
         }
         printf("\nTiempo Final: %d\n", hist->tiempoFinal);
-        printf("\nTiempo CPU Ocioso: %d\n", ocioso);
+        printf("\nCantidad de procesos terminados: %d\n", largo);
         
         if (hist->tiempoFinal - temp->anterior->tSalida > 0){
             ocioso += hist->tiempoFinal - temp->anterior->tSalida;
@@ -321,6 +321,17 @@ void reporteCPU(ListaColaReady * hist){
         
     }
     printf("\n~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\n");
+}
+
+bool cmpString(char str1[], char str2[]){
+    int i = 0;
+    while(str1[i]){
+        if (!(str1[i] == str2[i])){
+            return false;
+        }
+        i++;
+    }
+    return true;
 }
 
 
