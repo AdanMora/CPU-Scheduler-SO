@@ -4,12 +4,13 @@
 #include<arpa/inet.h> //inet_addr
 #include<pthread.h>
 
+//definir estructura pequena para agarrar los parametros por linea
 typedef struct{
 	int burst;
 	int tasa;
 } Param;
 
-//hice un cambio
+
 //hilos
 void* automatico(void*);
 void* mamual(void*);
@@ -20,13 +21,9 @@ void* generadorManual(void*);
 int main(int argc , char *argv[])
 {
 	int var;
-	char param[256];
-	char *param2;
 	if(!strcmp("automatico",argv[1])){
 		
-		puts("pase auto");
-		var = atoi(argv[2]);	
-		printf("%d\n",var);
+		//recollection de parametros para automatico
 		Param *param = malloc(sizeof(Param));
 		param->burst = atoi(argv[2]);
 		param->tasa = atoi(argv[3]);
@@ -38,8 +35,10 @@ int main(int argc , char *argv[])
 	}
 	else if(!strcmp("manual",argv[1])){
 		
+		char* nombre = argv[2];
+		printf("%s\n", nombre);
 		pthread_t main_thread;
-		pthread_create(&main_thread, NULL,generadorManual, (void*) var);
+		pthread_create(&main_thread, NULL,generadorManual, (void*) nombre);
 		pthread_join(main_thread,NULL);
 	}
 	else{
@@ -48,9 +47,16 @@ int main(int argc , char *argv[])
 	
 }
 
-//hilo para generar burst y prioridad automaticamente
+
+/*
+ * Hilo para generar burst y prioridad automaticamente
+ * Entradas: Estructura Param
+ * Salidas: no tiene.
+ * Restricciones: no tiene.
+ */
 void* automatico(void* var){
 	int sock, burst, prioridad, i;
+	//generador random
 	time_t t;
 	srand((unsigned) time(&t));
 	
@@ -61,38 +67,40 @@ void* automatico(void* var){
     	char message[1000] , server_reply[2000];
 	char msg[2000], pri[2000];
 
+	//generando random segun el parametro escogdo
 	Param* param = (Param*) var;
 	burst=(rand()%param->burst)+1;
 	prioridad=(rand()%5)+1;
 	
 	sprintf(msg,"%d",burst);
-    	//Create socket
+    	//Creacion de Socket
     	sock = socket(AF_INET , SOCK_STREAM , 0);
     	if (sock == -1)
     	{
-        	printf("Could not create socket");
+        	printf("No se pudo crear el socket");
     	}
-    	puts("Socket created");
+    	puts("==Socket creado==");
      	
+	//configuracion del socket
     	server.sin_addr.s_addr = inet_addr("127.0.0.1");
     	server.sin_family = AF_INET;
     	server.sin_port = htons( 8888 );
  
-    	//Connect to remote server
+    	//Conectando con socket
     	if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
     	{
         	perror("connect failed. Error");
         	return 1;
     	}
      
-    	puts("Connected\n");
+    	puts("Conectado\n");
      
-    	//keep communicating with server
+    	//Comunicacion con socket
 
         
 	puts("...Inicio de proceso...\n");
          
-        //Receive a reply from the server
+        
 	do{
 		//memset(pri,'\0',sizeof(pri));
 		sprintf(burst_s,"%d",burst);
@@ -106,21 +114,28 @@ void* automatico(void* var){
 		
 	}while(++i<1);
 
+	//Recibiendo respuestas por parte del servidor
 	if( recv(sock , server_reply , 2000 , 0) < 0)
         {
             puts("recv failed");
             return 1;
         }
-	puts(" --- Envie al servidor ---");
-	
+	puts(" --- Envio al servidor ---\n");
+	puts(" --------------------------");
         puts("Server reply :");
         puts(server_reply);
 	
-     
+     //Cierre de conexion y socket
     close(sock);
     return 0;
 }
 
+/*
+ * Hilo para generar burst y prioridad por un archivo
+ * Entradas: No tiene
+ * Salidas: no tiene.
+ * Restricciones: no tiene.
+ */
 void* manual(void* var){
 	
 	int sock, burst, prioridad, i;
@@ -131,46 +146,46 @@ void* manual(void* var){
 	char* buff = (char *) var;
 	
 	sprintf(msg,"%d",burst);
-    //Create socket
+    //Creando socket
 	sock = socket(AF_INET , SOCK_STREAM , 0);
 	if (sock == -1)
 	{
 	        printf("Could not create socket");
 	}
-	puts("Socket created");
+	puts("Socket creado");
      
 	server.sin_addr.s_addr = inet_addr("127.0.0.1");
     	server.sin_family = AF_INET;
     	server.sin_port = htons( 8888 );
  
-    //Connect to remote server
+    //Conexion con servidor
     	if (connect(sock , (struct sockaddr *)&server , sizeof(server)) < 0)
     	{
         	perror("connect failed. Error");
         	return 1;
     	}
      
-    	puts("Connected\n");
+    	puts("Conectado\n");
      
-    //keep communicating with server
+    //Comunicacion con servidor
 
-        printf("Enter message : ");
-	puts("...Envio mshg...\n");
+	puts("...Inicio de proceso...\n");
          
-        //Receive a reply from the server
+        //Envio de burst y prioridad
 	do{
 		//memset(buff,'\0',sizeof(buff));
-		puts(buff);
+		puts("Enviando burst y prioridad");
 		send(sock,buff,strlen(buff),0);
 	}while(++i<1);
 
+	//Recibe respuesta del servidor
 	if( recv(sock , server_reply , 2000 , 0) < 0)
         {
             puts("recv failed");
             return 1;
         }
-	puts(" --- asdasdad 0000");
-	
+	puts(" --- Envio al servidor ...");
+	puts(" --------------------------");
         puts("Server reply :");
         puts(server_reply);
 
@@ -201,28 +216,28 @@ void* generador(void* var){
 }
 
 void* generadorManual(void* var){
-	//char* nbrArch = var;
-	//printf(nbrArch);
-	FILE* archivo = fopen("datos","r");
+	char* nbrArch = var;
+	printf("Generador> %s",nbrArch);
+	FILE* archivo = fopen(nbrArch,"r");
 	char line[256];
 	char* burst;
 	char* priority;
 	char* data[2];
+	time_t t;
+	srand((unsigned) time(&t));
+	int tasa_sleep;
 	
 	int i=0;
 	while(fgets(line,sizeof(line),archivo)){
 		char* buff=line;
-		//printf("%s",line);
-		//puts("antes");
+		tasa_sleep=(rand()%5)+3;
 		pthread_t generarM;
 		pthread_create(&generarM,NULL,manual,(void*) buff);
 		pthread_join(generarM,NULL);
-		//burst = strtok(buff," ");
-		//priority = strtok(NULL," ");
-		//puts(burst);
-		//puts(priority);
 		
-		sleep(2);
+		printf("Tasa de creacion = %d segundos\n",tasa_sleep);
+		printf("===========================================\n");
+		sleep(tasa_sleep);
 	}
 
 	fclose(archivo);
