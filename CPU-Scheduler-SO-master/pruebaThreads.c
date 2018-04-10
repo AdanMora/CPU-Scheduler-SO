@@ -282,7 +282,8 @@ int  main(int argc, char * argv []) {  // Anadi (no tengo idioma espanol xd) el 
 			} else {
 				if (cmpString(argv[1],inRr)){
 					algoritmo = 3;
-					quantum = *argv[2];
+					quantum = atoi(argv[2]);
+					
 					if (argc < 3){
 						printf("\nFalta el parametro del quantum, intente nuevamente.\n");
 						return 0;
