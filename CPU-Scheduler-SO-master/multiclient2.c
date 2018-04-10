@@ -4,6 +4,11 @@
 #include<arpa/inet.h> //inet_addr
 #include<pthread.h>
 
+typedef struct{
+	int burst;
+	int tasa;
+} Param;
+
 //hice un cambio
 //hilos
 void* automatico(void*);
@@ -15,12 +20,20 @@ void* generadorManual(void*);
 int main(int argc , char *argv[])
 {
 	int var;
-	var = atoi(argv[2]);
-	printf("%s\n", argv[1]);
+	char param[256];
+	char *param2;
 	if(!strcmp("automatico",argv[1])){
 		
+		puts("pase auto");
+		var = atoi(argv[2]);	
+		printf("%d\n",var);
+		Param *param = malloc(sizeof(Param));
+		param->burst = atoi(argv[2]);
+		param->tasa = atoi(argv[3]);
+		printf("param burst> %d\nparam tsa>%d\n",param->burst,param->tasa);
+
 		pthread_t main;
-		pthread_create(&main,NULL,generador,(void*)var);
+		pthread_create(&main,NULL,generador,(void*)param);
 		pthread_join(main,NULL);
 	}
 	else if(!strcmp("manual",argv[1])){
@@ -40,14 +53,17 @@ void* automatico(void* var){
 	int sock, burst, prioridad, i;
 	time_t t;
 	srand((unsigned) time(&t));
-	burst=(rand()%10)+1;
-	prioridad=(rand()%5)+1;
+	
 	char burst_s[20];
 	char pri_s[20];
 	char* linea;
     	struct sockaddr_in server;
     	char message[1000] , server_reply[2000];
 	char msg[2000], pri[2000];
+
+	Param* param = (Param*) var;
+	burst=(rand()%param->burst)+1;
+	prioridad=(rand()%5)+1;
 	
 	sprintf(msg,"%d",burst);
     	//Create socket
@@ -73,8 +89,8 @@ void* automatico(void* var){
      
     	//keep communicating with server
 
-        printf("Enter message : ");
-	puts("...Envio mshg...\n");
+        
+	puts("...Inicio de proceso...\n");
          
         //Receive a reply from the server
 	do{
@@ -83,11 +99,11 @@ void* automatico(void* var){
 		sprintf(pri_s,"%d",prioridad);
 		strcat(burst_s," ");
 		strcat(burst_s,pri_s);
-		puts("asgino");
+		
 		strcpy(msg,burst_s);
-		puts("despues");
+		
 		send(sock,msg,strlen(msg),0);
-		puts("no se encio");
+		
 	}while(++i<1);
 
 	if( recv(sock , server_reply , 2000 , 0) < 0)
@@ -95,11 +111,11 @@ void* automatico(void* var){
             puts("recv failed");
             return 1;
         }
-	puts(" --- asdasdad 0000");
+	puts(" --- Envie al servidor ---");
 	
         puts("Server reply :");
         puts(server_reply);
-
+	
      
     close(sock);
     return 0;
@@ -165,13 +181,21 @@ void* manual(void* var){
 
 
 void* generador(void* var){
-
+	
+	time_t t;
+	srand((unsigned) time(&t));
+	Param* param = (Param*) var;
+	int tasa_sleep;
+	
 	while(1){
-
+		tasa_sleep = (rand()%param->tasa)+1;
+		 
 		pthread_t generar;
-		pthread_create(&generar,NULL,automatico,(void*) var);
+		pthread_create(&generar,NULL,automatico,(void*) param);
 		pthread_join(generar,NULL);
-		sleep(10);
+		printf("Tasa de creacion = %d segundos\n",tasa_sleep);
+		printf("===========================================\n");
+		sleep(tasa_sleep);
 
 	}
 }

@@ -26,6 +26,7 @@ typedef struct ListaColaReady{
 	
 } ListaColaReady;
 
+
 typedef struct ListasArgs{
 	ListaColaReady * colaReady;
 	ListaColaReady * hist;
