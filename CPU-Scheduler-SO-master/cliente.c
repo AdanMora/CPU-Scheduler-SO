@@ -194,7 +194,12 @@ void* manual(void* var){
     return 0;
 }
 
-
+/*
+ * Hilo que genera los hilos para la creacion de PCB automaticamente
+ * Entradas: Estructura Param
+ * Salidas: no tiene.
+ * Restricciones: no tiene.
+ */
 void* generador(void* var){
 	
 	time_t t;
@@ -215,6 +220,12 @@ void* generador(void* var){
 	}
 }
 
+/*
+ * Hilo que lee el archivo, enviando cada linea a un hilo para la generacion del PCB
+ * Entradas: char* nombreArchivo
+ * Salidas: no tiene.
+ * Restricciones: no tiene.
+ */
 void* generadorManual(void* var){
 	char* nbrArch = var;
 	printf("Generador> %s",nbrArch);
